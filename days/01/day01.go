@@ -9,13 +9,22 @@ import (
 )
 
 func parsePart1(line string) (result int) {
-	regex, _ := regexp.Compile("\\d")
-	matches := regex.FindAllString(line, -1)
-	first := matches[0]
-	last := first
-	if len(matches) > 1 {
-		last = matches[len(matches)-1]
-	}
+	regex := "(\\d)"
+	return parse(line, regex)
+}
+
+func parsePart2(line string) (result int) {
+	regex := "(\\d|one|two|three|four|five|six|seven|eight|nine)"
+	return parse(line, regex)
+}
+
+func parse(line string, baseExp string) (result int) {
+	start_exp, _ := regexp.Compile("^.*?" + baseExp)
+	end_exp, _ := regexp.Compile(".*" + baseExp)
+	matches_start := start_exp.FindStringSubmatch(line)
+	matches_end := end_exp.FindStringSubmatch(line)
+	first := translate(matches_start[1])
+	last := translate(matches_end[1])
 	result, _ = strconv.Atoi(first + last)
 	return result
 }
@@ -32,20 +41,6 @@ func translate(digit string) string {
 	}
 	return result
 }
-
-func parsePart2(line string) (result int) {
-	regex, _ := regexp.Compile("(\\d|one|two|three|four|five|six|seven|eight|nine)")
-	matches := regex.FindAllStringSubmatch(line, -1)
-	fmt.Println(matches)
-	first := translate(matches[0][0])
-	last := first
-	if len(matches) > 1 {
-		last = translate(matches[len(matches)-1][0])
-	}
-	result, _ = strconv.Atoi(first + last)
-	return result
-}
-
 func solve(input string, parser func(string) int) (result int) {
 	lines := strings.Split(input, "\n")
 	for _, line := range lines {
