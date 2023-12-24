@@ -26,6 +26,15 @@ func (a Almanac) PassThroughAll(input int) int{
 	return input
 }
 
+func (a Almanac) IsInSeedRange(input int) bool {
+	for i := 0; i < len(a.Seeds)/2; i++ {
+		if (input >= a.Seeds[2*i]) && (input < a.Seeds[2*i] + a.Seeds[2*i+1]) {
+			return true
+		}
+	}
+	return false
+}
+
 type Range struct {
 	Target int;
 	Source int;
@@ -123,7 +132,7 @@ func Solve(al Almanac) int {
 	return locMin
 }
 
-func SolvePart2(al Almanac) int {
+func SolvePart2(al Almanac, initialStep int) int {
 	// Idea: reverse the mappings, and traverse back starting from location numbers until I obtain a valid seed
 	for _, mapping := range al.Mappings {
 		for i, mapRange := range mapping.Ranges {
@@ -132,16 +141,34 @@ func SolvePart2(al Almanac) int {
 	}
 	// Now also reverse the order of maps
 	slices.Reverse(al.Mappings)
-	seed := 0
-	for true {
-		result := al.PassThroughAll(seed)
-		if ((result >= 79) && (result < 93)) || ((result >= 55) && (result < 68)) {
-			return seed
-		}
-		seed += 1
+
+	// To speed up the procedure, run with a initial step size > 1 (e.g. 10000),
+	// search for the first location that is mapped to one of the seed ranges.
+	// Then use the previous location (i.e. first location - step), and restart
+	// the search using a reduced seed size
+	startPos := 0
+	next := 0
+	prev := 0	
+	for initialStep >= 1 {
+		prev, next = StepPart2(al, startPos, initialStep)
+		initialStep = initialStep/10
+		startPos = prev
 	}
-	return 0
+	return next;
+	
 }
+
+func StepPart2(al Almanac, position, step int) (prev, next int){
+	for true {
+		result := al.PassThroughAll(position)		
+		if al.IsInSeedRange(result){
+			return position - step, position
+		}
+		position += step
+	}
+	return 0, 0
+}
+
 
 func main() {
 	content, err := os.ReadFile("input.txt")
@@ -151,7 +178,9 @@ func main() {
 	input := string(content)
 	almanac := ParseInput(input)
 	part1 := Solve(almanac)
+	part2 := SolvePart2(almanac, 10000)
 
-	fmt.Printf("Part1: %d\n", part1)
+	fmt.Printf("Part 1: %d\n", part1)
+	fmt.Printf("Part 2: %d\n", part2)
 
 }

@@ -83,7 +83,7 @@ func TestSolve(t *testing.T) {
 
 	// Part 2
 	want2 := 46
-	got2 := SolvePart2(almanac)
+	got2 := SolvePart2(almanac, 1)
 	if want2 != got2 {
 		t.Errorf("Got %d, want %d", got2, want2)
 	}
