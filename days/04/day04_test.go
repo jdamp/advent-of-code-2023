@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	_ "embed"
+	"testing"
+)
 
 func TestCard(t *testing.T) {
 	CardTests := []struct {
@@ -50,12 +53,7 @@ func TestCard(t *testing.T) {
 			want: 0,
 		},
 	}
-	/*
-		Card 3:  |
-		Card 4:  |
-		Card 5:|
-		Card 6:  |
-	*/
+
 	for _, cardTest := range CardTests {
 		got := cardTest.card.Score()
 		if got != cardTest.want {
@@ -63,3 +61,23 @@ func TestCard(t *testing.T) {
 		}
 	}
 }
+
+
+//go:embed test_input.txt
+var test_input string
+func TestSole(t *testing.T) {
+	got1, got2 := Solve(test_input)
+	
+	want1 := 13
+	want2 := 30
+	if got1 != want1 {
+		t.Errorf("Wrong result for Part1, got %d, want %d", got1, want1)	
+	}
+	if got2 != want2 {
+		t.Errorf("Wrong result for Part2, got %d, want %d", got2, want2)
+	}
+}
+
+
+//Part 2:
+//-> Need score per card
