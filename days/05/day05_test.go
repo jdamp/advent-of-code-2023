@@ -81,4 +81,11 @@ func TestSolve(t *testing.T) {
 		t.Errorf("Got %d, want %d", got, want)
 	}
 
+	// Part 2
+	want2 := 46
+	got2 := SolvePart2(almanac)
+	if want2 != got2 {
+		t.Errorf("Got %d, want %d", got2, want2)
+	}
+
 }

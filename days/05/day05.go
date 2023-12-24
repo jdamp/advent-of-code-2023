@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -18,8 +19,11 @@ type Almanac struct{
 	Mappings []RangeMapping;
 }
 
-func (a Almanac) PassThrough() {
-
+func (a Almanac) PassThroughAll(input int) int{
+	for _, mapping := range a.Mappings {
+		input = mapping.PassThrough(input)
+	}
+	return input
 }
 
 type Range struct {
@@ -111,15 +115,32 @@ func findTextBetween(text, phrase string) (string) {
 func Solve(al Almanac) int {
 	locMin := math.MaxInt64
 	for _, seed := range al.Seeds {
-		result := seed
-		for _, mapping := range al.Mappings {
-			result = mapping.PassThrough(result)
-		}
+		result := al.PassThroughAll(seed)
 		if result < locMin {
 			locMin = result
 		}		
 	}
 	return locMin
+}
+
+func SolvePart2(al Almanac) int {
+	// Idea: reverse the mappings, and traverse back starting from location numbers until I obtain a valid seed
+	for _, mapping := range al.Mappings {
+		for i, mapRange := range mapping.Ranges {
+			mapping.Ranges[i] = Range{mapRange.Source, mapRange.Target, mapRange.Length}
+		}
+	}
+	// Now also reverse the order of maps
+	slices.Reverse(al.Mappings)
+	seed := 0
+	for true {
+		result := al.PassThroughAll(seed)
+		if ((result >= 79) && (result < 93)) || ((result >= 55) && (result < 68)) {
+			return seed
+		}
+		seed += 1
+	}
+	return 0
 }
 
 func main() {
