@@ -34,6 +34,10 @@ var cardValues = map[string]int {
 	"A": 14, "K": 13, "Q": 12, "J": 11, "T": 10,
 }
 
+var cardValuesJoker = map[string]int {
+	"A": 14, "K": 13, "Q": 12, "J": 1, "T": 10,
+}
+
 
 type Hand struct {
 	Cards []int
@@ -41,14 +45,20 @@ type Hand struct {
 	Bid int
 }
 
-func NewHand(line string) *Hand {
+func NewHand(line string, joker bool) *Hand {
 	parts := strings.Split(line, " ")
 	var hand Hand
+	var lookup map[string]int
+	if joker {
+		lookup = cardValuesJoker
+	} else {
+		lookup = cardValues
+	}
 	for _, cardSymbol := range parts[0] {
 		if cardValue, err := strconv.Atoi(string(cardSymbol)); err == nil {
 			hand.Cards = append(hand.Cards, cardValue)
 		} else {
-			cardValue = cardValues[string(cardSymbol)]
+			cardValue = lookup[string(cardSymbol)]
 			hand.Cards = append(hand.Cards, cardValue)
 		}
 	}
@@ -76,7 +86,7 @@ func rankHand(hand Hand) rank{
 		if value > 0 {
 			countValues = append(countValues, value)
 		}
-	}
+	}	
 	slices.Sort(countValues)
 	if slices.Equal(countValues, FiveOfKindCount) {
 		return FiveOfKind
@@ -95,10 +105,12 @@ func rankHand(hand Hand) rank{
 	}
 }
 
+
+
 func Solve(input string) int64{
 	var hands []*Hand
 	for _, line := range strings.Split(input, "\n") {
-		hands = append(hands, NewHand(line))
+		hands = append(hands, NewHand(line, false))
 	}
 	// Sort hands in a way that the weakest ranks occur first
 	sort.Slice(hands, func(i, j int) bool {
@@ -123,11 +135,63 @@ func Solve(input string) int64{
 	return result
 }
 
-
 func main() {
 	content, _ := os.ReadFile("input.txt")
 	input := string(content)
 	result := Solve(input)
 	fmt.Printf("Part1: %d\n", result)
 
+}
+
+
+
+// Essentially I just need to recalculate the rank
+func GetJokerCardRank(hand Hand, counts map[int]int) rank {
+	// Get numbers of jokers from the map
+	joker := cardValuesJoker["J"]
+	jokerCounts := counts[joker]
+	delete(counts, joker)
+	// Convert the remaining card to a count array
+	countValues := []int{}
+	for _, value := range counts {
+		if value > 0 {
+			countValues = append(countValues, value)
+		}
+	}
+	slices.Sort(countValues)
+	switch jokerCounts {
+	// 4 or 5 J -> FiveOfKind
+	case 5:
+		return FiveOfKind
+	case 4:
+		return FiveOfKind
+	// 3 J -> if 2 equal Five, else Four
+	case 3:
+		if slices.Contains(countValues, 2) {
+			return FiveOfKind
+		}
+		return FourOfKind
+	// 2 J -> if 3 equal Five, else if 2 equal Four, else Three
+	case 2:
+		if slices.Contains(countValues, 3) {
+			return FiveOfKind
+		} else if slices.Contains(countValues, 2) {
+			return FourOfKind
+		}
+		return ThreeOfKind
+	// 1 J -> if 4 equal Five, else if 3 equal Four, else if 2&2 equal full house
+	//   else if 2 equal Three, else OnePair
+	case 1:
+		if slices.Contains(countValues, 4) {
+			return FiveOfKind
+		} else if slices.Contains(countValues, 3) {
+			return FourOfKind
+		} else if slices.Equal(countValues, []int{2, 2}) {
+			return FullHouse
+		} else if slices.Contains(countValues, 2) {
+			return ThreeOfKind
+		}
+		return OnePair
+	}
+	return hand.Rank
 }
