@@ -30,13 +30,17 @@ func TestHandType(t *testing.T) {
 
 //go:embed test_input.txt
 var input string
-func TestSolvePart1(t *testing.T) {
-	var want int64 = 6440
-	got := Solve(input)
+func TestSolve(t *testing.T) {
+	var want int64 = 6440	
+	got := Solve(input, false)
 	if got != want {
 		t.Errorf("Wrong result, got %d, want %d", got, want)
 	}
-
+	gotPart2 := Solve(input, true)
+	var wantPart2 int64 = 5905
+	if gotPart2 != wantPart2 {
+		t.Errorf("Wrong result, got %d, want %d", gotPart2, wantPart2)
+	}
 }
 
 
@@ -49,22 +53,18 @@ func TestReplaceJoker(t *testing.T) {
 		{NewHand("2345J 28", true), OnePair},
 		{NewHand("2233J 28", true), FullHouse},
 		{NewHand("QKAJJ 320", true), ThreeOfKind},
+		{NewHand("2234J 320", true), ThreeOfKind},
 		{NewHand("T55J5 684", true), FourOfKind},
 		{NewHand("QQQJJ 77", true), FiveOfKind},
+		{NewHand("JJJJJ 1", true), FiveOfKind},
+		{NewHand("JJJJQ 2", true), FiveOfKind},
+		{NewHand("JJJ66 2", true), FiveOfKind},
 	}
+
 	for _, testCase := range testCases {
-		counts := make(map[int]int)
-		for _, card := range testCase.hand.Cards {
-			if _, ok := counts[card]; ok {
-				counts[card] += 1
-			} else {
-				counts[card] = 1
-			}		
-		}
-		newRank := GetJokerCardRank(*testCase.hand, counts)
-		if newRank != testCase.want {
+		if testCase.hand.Rank != testCase.want {
 			t.Errorf("Error replacing Jokers: got %d, wanted %d for %v",
-			 newRank, testCase.want, testCase.hand)
+			 testCase.hand.Rank, testCase.want, testCase.hand)
 		}
 	}
 }
